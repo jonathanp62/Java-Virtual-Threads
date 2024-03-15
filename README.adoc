@@ -1,0 +1,5 @@
+= A demonstration of virtual threads
+
+This demonstration application is for the purpose of using virtual threads in an application.
+
+==== Current version: 0.1.0.
