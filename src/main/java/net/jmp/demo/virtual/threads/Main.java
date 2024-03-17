@@ -1,12 +1,11 @@
 package net.jmp.demo.virtual.threads;
 
 /*
- * (#)Main.java 0.4.0   03/05/2024
- * (#)Main.java 0.2.0   02/29/2024
- * (#)Main.java 0.1.0   02/27/2024
+ * (#)Main.java 0.2.0   03/17/2024
+ * (#)Main.java 0.1.0   03/15/2024
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.2.0
  * @since     0.1.0
  *
  * MIT License
@@ -45,8 +44,31 @@ public final class Main {
 
     private void run() {
         this.logger.entry();
+
         this.logger.info("Begin starting up...");
+
+        this.easy();
+
         this.logger.info("Done shutting down.");
+
+        this.logger.exit();
+    }
+
+    private void easy() {
+        this.logger.entry();
+
+        // Thread.ofVirtual() returns Thread.Builder
+
+        final var thread = Thread.ofVirtual().start(() -> this.logger.info("Hello"));
+
+        try {
+            thread.join();
+        } catch (final InterruptedException ie) {
+            this.logger.catching(ie);
+
+            Thread.currentThread().interrupt(); // Restore the interrupt status
+        }
+
         this.logger.exit();
     }
 
