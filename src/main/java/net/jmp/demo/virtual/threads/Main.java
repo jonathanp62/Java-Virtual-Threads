@@ -31,6 +31,11 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
@@ -48,6 +53,9 @@ public final class Main {
         this.logger.info("Begin starting up...");
 
         this.easy();
+        this.builderOneThread();
+        this.builderTwoThreads();
+        this.executor();
 
         this.logger.info("Done shutting down.");
 
@@ -67,6 +75,89 @@ public final class Main {
             this.logger.catching(ie);
 
             Thread.currentThread().interrupt(); // Restore the interrupt status
+        }
+
+        this.logger.exit();
+    }
+
+    private void builderOneThread() {
+        this.logger.entry();
+
+        final Thread.Builder builder = Thread.ofVirtual().name("My-Thread");
+
+        final Runnable task = () -> {
+            this.logger.info("Running thread");
+        };
+
+        final var t = builder.start(task);
+
+        if (this.logger.isInfoEnabled())
+            this.logger.info("Thread name: {}", t.getName());
+
+        try {
+            t.join();
+        } catch (final InterruptedException ie) {
+            this.logger.catching(ie);
+
+            Thread.currentThread().interrupt(); // Restore the interrupt status
+        }
+
+        this.logger.exit();
+    }
+
+    private void builderTwoThreads() {
+        this.logger.entry();
+
+        final Thread.Builder builder = Thread.ofVirtual().name("worker-", 0);
+
+        final Runnable task = () -> {
+            if (this.logger.isInfoEnabled())
+                this.logger.info("Thread ID: {}", Thread.currentThread().threadId());
+        };
+
+        final var worker0 = builder.start(task);
+        final var worker1 = builder.start(task);
+
+        try {
+            worker0.join();
+        } catch (final InterruptedException ie) {
+            this.logger.catching(ie);
+
+            Thread.currentThread().interrupt(); // Restore the interrupt status
+        }
+
+        try {
+            worker1.join();
+        } catch (final InterruptedException ie) {
+            this.logger.catching(ie);
+
+            Thread.currentThread().interrupt(); // Restore the interrupt status
+        }
+
+        if (this.logger.isInfoEnabled()) {
+            this.logger.info("{} terminated", worker0.getName());
+            this.logger.info("{} terminated", worker1.getName());
+        }
+
+        this.logger.exit();
+    }
+
+    private void executor() {
+        this.logger.entry();
+
+        try (final ExecutorService myExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+            final Future<?> future = myExecutor.submit(() -> this.logger.info("Running task in a future"));
+
+            try {
+                future.get();
+
+                this.logger.info("Future task completed OK");
+            } catch (final InterruptedException | ExecutionException e) {
+                this.logger.catching(e);
+
+                if (e instanceof InterruptedException)
+                    Thread.currentThread().interrupt(); // Restore the interrupt status
+            }
         }
 
         this.logger.exit();
