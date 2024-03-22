@@ -32,10 +32,7 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 import org.slf4j.LoggerFactory;
 
@@ -184,15 +181,13 @@ public final class Main {
         this.logger.exit();
     }
 
-    private Future<?> startServer() {
+    private Future<Void> startServer() {
         this.logger.entry();
 
-        Future<?> future;
+        Future<Void> future;
 
         try (final ExecutorService myExecutor = Executors.newFixedThreadPool(1)) {
-            final var server = new Server();
-
-            future = myExecutor.submit(server);
+            future = myExecutor.submit(() -> new Server().call());
         }
 
         this.logger.exit(future);
@@ -200,15 +195,13 @@ public final class Main {
         return future;
     }
 
-    private Future<?> startClient() {
+    private Future<Void> startClient() {
         this.logger.entry();
 
-        Future<?> future;
+        Future<Void> future;
 
         try (final ExecutorService myExecutor = Executors.newFixedThreadPool(1)) {
-            final var client = new Client();
-
-            future = myExecutor.submit(client);
+            future = myExecutor.submit(() -> new Client().call());
         }
 
         this.logger.exit(future);

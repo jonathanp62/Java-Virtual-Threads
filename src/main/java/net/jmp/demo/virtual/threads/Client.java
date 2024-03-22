@@ -30,11 +30,13 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
+import java.util.concurrent.Callable;
+
 import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
 
-final class Client implements Runnable {
+final class Client implements Callable<Void> {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
 
     Client() {
@@ -42,9 +44,11 @@ final class Client implements Runnable {
     }
 
     @Override
-    public void run() {
+    public Void call() throws Exception {
         this.logger.entry();
         this.logger.info("Hello from the client");
         this.logger.exit();
+
+        return null;
     }
 }
