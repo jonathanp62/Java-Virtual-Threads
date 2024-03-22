@@ -1,11 +1,12 @@
 package net.jmp.demo.virtual.threads;
 
 /*
+ * (#)Main.java 0.3.0   03/22/2024
  * (#)Main.java 0.2.0   03/17/2024
  * (#)Main.java 0.1.0   03/15/2024
  *
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.3.0
  * @since     0.1.0
  *
  * MIT License
@@ -56,6 +57,7 @@ public final class Main {
         this.builderOneThread();
         this.builderTwoThreads();
         this.executor();
+        this.clientServer();
 
         this.logger.info("Done shutting down.");
 
@@ -161,6 +163,57 @@ public final class Main {
         }
 
         this.logger.exit();
+    }
+
+    private void clientServer() {
+        this.logger.entry();
+
+        final var server = this.startServer();
+        final var client = this.startClient();
+
+        try {
+            client.get();
+            server.get();
+        } catch (final InterruptedException | ExecutionException e) {
+            this.logger.catching(e);
+
+            if (e instanceof InterruptedException)
+                Thread.currentThread().interrupt(); // Restore the interrupt status
+        }
+
+        this.logger.exit();
+    }
+
+    private Future<?> startServer() {
+        this.logger.entry();
+
+        Future<?> future;
+
+        try (final ExecutorService myExecutor = Executors.newFixedThreadPool(1)) {
+            final var server = new Server();
+
+            future = myExecutor.submit(server);
+        }
+
+        this.logger.exit(future);
+
+        return future;
+    }
+
+    private Future<?> startClient() {
+        this.logger.entry();
+
+        Future<?> future;
+
+        try (final ExecutorService myExecutor = Executors.newFixedThreadPool(1)) {
+            final var client = new Client();
+
+            future = myExecutor.submit(client);
+        }
+
+        this.logger.exit(future);
+
+        return future;
     }
 
     public static void main(final String[] arguments) {
