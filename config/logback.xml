@@ -38,13 +38,25 @@
         </encoder>
     </appender>
 
-    <logger name="net.jmp.demo.virtual.threads.Client" additivity="false" level="trace">
+    <logger name="net.jmp.demo.virtual.threads.Builder" additivity="false" level="info">
         <appender-ref ref="MAIN" />
     </logger>
-    <logger name="net.jmp.demo.virtual.threads.Main" additivity="false" level="debug">
+    <logger name="net.jmp.demo.virtual.threads.Client" additivity="false" level="debug">
         <appender-ref ref="MAIN" />
     </logger>
-    <logger name="net.jmp.demo.virtual.threads.Server" additivity="false" level="trace">
+    <logger name="net.jmp.demo.virtual.threads.ClientServer" additivity="false" level="debug">
+        <appender-ref ref="MAIN" />
+    </logger>
+    <logger name="net.jmp.demo.virtual.threads.Easy" additivity="false" level="info">
+        <appender-ref ref="MAIN" />
+    </logger>
+    <logger name="net.jmp.demo.virtual.threads.Executor" additivity="false" level="info">
+        <appender-ref ref="MAIN" />
+    </logger>
+    <logger name="net.jmp.demo.virtual.threads.Main" additivity="false" level="info">
+        <appender-ref ref="MAIN" />
+    </logger>
+    <logger name="net.jmp.demo.virtual.threads.Server" additivity="false" level="debug">
         <appender-ref ref="MAIN" />
     </logger>
 

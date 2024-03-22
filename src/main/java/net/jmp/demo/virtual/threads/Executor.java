@@ -1,13 +1,11 @@
 package net.jmp.demo.virtual.threads;
 
 /*
- * (#)Main.java 0.3.0   03/22/2024
- * (#)Main.java 0.2.0   03/17/2024
- * (#)Main.java 0.1.0   03/15/2024
+ * (#)Executor.java 0.3.0   03/22/2024
  *
  * @author    Jonathan Parker
  * @version   0.3.0
- * @since     0.1.0
+ * @since     0.3.0
  *
  * MIT License
  *
@@ -36,62 +34,37 @@ import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
 
-public final class Main {
-    private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
-    private static final int PORT_FOR_CLIENT_SERVER = 8080;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-    private Main() {
+final class Executor implements Runnable {
+    private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
+
+    Executor() {
         super();
     }
 
-    private void run() {
+    @Override
+    public void run() {
         this.logger.entry();
 
-        this.logger.info("Begin starting up...");
+        try (final ExecutorService myExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+            final Future<?> future = myExecutor.submit(() -> this.logger.info("Running task in a future"));
 
-        this.easy();
-        this.builder();
-        this.executor();
-        this.clientServer();
+            try {
+                future.get();
 
-        this.logger.info("Done shutting down.");
+                this.logger.info("Future task completed OK");
+            } catch (final InterruptedException | ExecutionException e) {
+                this.logger.catching(e);
 
-        this.logger.exit();
-    }
-
-    private void easy() {
-        this.logger.entry();
-
-        new Easy().run();
+                if (e instanceof InterruptedException)
+                    Thread.currentThread().interrupt(); // Restore the interrupt status
+            }
+        }
 
         this.logger.exit();
-    }
-
-    private void builder() {
-        this.logger.entry();
-
-        new Builder().run();
-
-        this.logger.exit();
-    }
-
-    private void executor() {
-        this.logger.entry();
-
-        new Executor().run();
-
-        this.logger.exit();
-    }
-
-    private void clientServer() {
-        this.logger.entry();
-
-        new ClientServer(PORT_FOR_CLIENT_SERVER).run();
-
-        this.logger.exit();
-    }
-
-    public static void main(final String[] arguments) {
-        new Main().run();
     }
 }

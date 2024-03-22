@@ -1,13 +1,11 @@
 package net.jmp.demo.virtual.threads;
 
 /*
- * (#)Main.java 0.3.0   03/22/2024
- * (#)Main.java 0.2.0   03/17/2024
- * (#)Main.java 0.1.0   03/15/2024
+ * (#)Easy.java 0.3.0   03/22/2024
  *
  * @author    Jonathan Parker
  * @version   0.3.0
- * @since     0.1.0
+ * @since     0.3.0
  *
  * MIT License
  *
@@ -36,62 +34,29 @@ import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
 
-public final class Main {
+final class Easy implements Runnable {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
-    private static final int PORT_FOR_CLIENT_SERVER = 8080;
 
-    private Main() {
+    Easy() {
         super();
     }
 
-    private void run() {
+    @Override
+    public void run() {
         this.logger.entry();
 
-        this.logger.info("Begin starting up...");
+        // Thread.ofVirtual() returns Thread.Builder
 
-        this.easy();
-        this.builder();
-        this.executor();
-        this.clientServer();
+        final var thread = Thread.ofVirtual().start(() -> this.logger.info("Hello"));
 
-        this.logger.info("Done shutting down.");
+        try {
+            thread.join();
+        } catch (final InterruptedException ie) {
+            this.logger.catching(ie);
 
-        this.logger.exit();
-    }
-
-    private void easy() {
-        this.logger.entry();
-
-        new Easy().run();
+            Thread.currentThread().interrupt(); // Restore the interrupt status
+        }
 
         this.logger.exit();
-    }
-
-    private void builder() {
-        this.logger.entry();
-
-        new Builder().run();
-
-        this.logger.exit();
-    }
-
-    private void executor() {
-        this.logger.entry();
-
-        new Executor().run();
-
-        this.logger.exit();
-    }
-
-    private void clientServer() {
-        this.logger.entry();
-
-        new ClientServer(PORT_FOR_CLIENT_SERVER).run();
-
-        this.logger.exit();
-    }
-
-    public static void main(final String[] arguments) {
-        new Main().run();
     }
 }

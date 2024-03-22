@@ -33,9 +33,9 @@ package net.jmp.demo.virtual.threads;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 
 import java.net.ServerSocket;
+import java.net.Socket;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -47,7 +47,6 @@ import org.slf4j.ext.XLogger;
 
 final class Server implements Callable<Void> {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
-
     private final Semaphore semaphore;
     private final int port;
 
@@ -59,7 +58,7 @@ final class Server implements Callable<Void> {
     }
 
     @Override
-    public Void call() throws Exception {
+    public Void call() {
         this.logger.entry();
 
         this.logger.info("Will listen on port {}", this.port);
@@ -81,47 +80,51 @@ final class Server implements Callable<Void> {
         try (final var serverSocket = new ServerSocket(this.port)) {
             while (latch.getCount() == 1) {
                 if (!releasedSemaphore) {
-                    this.semaphore.release();
-                    this.logger.debug("Released semaphore");
+                    this.logger.debug("Releasing semaphore...");
 
                     releasedSemaphore = true;
+
+                    this.semaphore.release();
                 }
 
                 final var clientSocket = serverSocket.accept();    // Accept incoming connections
 
-                 /* Start a service thread */
-
-                final var thread = Thread.ofVirtual().start(() -> {
-                    try (
-                            final var out = new PrintWriter(clientSocket.getOutputStream(), true);
-                            final var in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    ) {
-                        String inputLine;
-
-                        while ((inputLine = in.readLine()) != null) {
-                            this.logger.info("Received from client: {}", inputLine);
-
-                            if (inputLine.startsWith("exit")) {
-                                this.logger.debug("Counting down latch");
-                                latch.countDown();
-                            }
-                        }
-                    } catch (final IOException ioe) {
-                        this.logger.catching(ioe);
-                    }
-                });
-
-                try {
-                    thread.join();
-                } catch (final InterruptedException ie) {
-                    this.logger.catching(ie);
-
-                    Thread.currentThread().interrupt(); // Restore the interrupt status
-                }
+                handleClientRequest(clientSocket, latch);
             }
         } catch (final IOException ioe) {
             this.logger.catching(ioe);
             this.logger.error("Exception caught when trying to listen on port {} or listening for a connection", this.port);
+        }
+
+        this.logger.exit();
+    }
+
+    private void handleClientRequest(final Socket clientSocket, final CountDownLatch latch) {
+        this.logger.entry(clientSocket, latch);
+
+        final var thread = Thread.ofVirtual().start(() -> {
+            try (final var in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+                String inputLine;
+
+                while ((inputLine = in.readLine()) != null) {
+                    this.logger.info("Received from client: {}", inputLine);
+
+                    if (inputLine.startsWith("exit")) {
+                        this.logger.debug("Counting down latch");
+                        latch.countDown();
+                    }
+                }
+            } catch (final IOException ioe) {
+                this.logger.catching(ioe);
+            }
+        });
+
+        try {
+            thread.join();
+        } catch (final InterruptedException ie) {
+            this.logger.catching(ie);
+
+            Thread.currentThread().interrupt(); // Restore the interrupt status
         }
 
         this.logger.exit();
