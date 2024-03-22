@@ -30,6 +30,13 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+
+import java.net.Socket;
+
 import java.util.concurrent.Callable;
 
 import org.slf4j.LoggerFactory;
@@ -39,16 +46,42 @@ import org.slf4j.ext.XLogger;
 final class Client implements Callable<Void> {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
 
-    Client() {
+    private final int port;
+
+    Client(final int port) {
         super();
+
+        this.port = port;
     }
 
     @Override
     public Void call() throws Exception {
         this.logger.entry();
-        this.logger.info("Hello from the client");
+
+        this.logger.info("Will transmit on port {}", port);
+
+        this.transmit();
+
         this.logger.exit();
 
         return null;
+    }
+
+    private void transmit() {
+        this.logger.entry();
+
+        try (
+                final var clientSocket = new Socket("localhost", this.port);
+
+                final var out = new PrintWriter(clientSocket.getOutputStream(), true);
+                final var in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        ) {
+            out.println("start");
+            out.println("exit");    // Signal the server to exit
+        } catch (final IOException ioe) {
+            this.logger.catching(ioe);
+        }
+
+        this.logger.exit();
     }
 }

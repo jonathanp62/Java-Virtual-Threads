@@ -40,6 +40,7 @@ import org.slf4j.ext.XLogger;
 
 public final class Main {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
+    private final int portForClientServer = 8080;
 
     private Main() {
         super();
@@ -165,11 +166,28 @@ public final class Main {
     private void clientServer() {
         this.logger.entry();
 
-        final var server = this.startServer();
-        final var client = this.startClient();
+        final var executorService = Executors.newFixedThreadPool(2);
+        final var semaphore = new Semaphore(1);
+        final var server = this.startServer(executorService, semaphore);
+
+         try {
+             this.logger.debug("Begin waiting on semaphore");
+             semaphore.acquire();
+             this.logger.debug("End waiting on semaphore");
+        } catch (final InterruptedException ie) {
+             this.logger.catching(ie);
+
+             Thread.currentThread().interrupt(); // Restore the interrupt status
+
+             // @todo Don't continue if exception caught
+        }
+
+        final var client = this.startClient(executorService);
 
         try {
+            this.logger.debug("Waiting on client");
             client.get();
+            this.logger.debug("Waiting on server");
             server.get();
         } catch (final InterruptedException | ExecutionException e) {
             this.logger.catching(e);
@@ -178,31 +196,25 @@ public final class Main {
                 Thread.currentThread().interrupt(); // Restore the interrupt status
         }
 
+        executorService.shutdown();
+
         this.logger.exit();
     }
 
-    private Future<Void> startServer() {
-        this.logger.entry();
+    private Future<Void> startServer(final ExecutorService executorService, final Semaphore semaphore) {
+        this.logger.entry(executorService, semaphore);
 
-        Future<Void> future;
-
-        try (final ExecutorService myExecutor = Executors.newFixedThreadPool(1)) {
-            future = myExecutor.submit(() -> new Server().call());
-        }
+        Future<Void> future = executorService.submit(() -> new Server(semaphore, this.portForClientServer).call());
 
         this.logger.exit(future);
 
         return future;
     }
 
-    private Future<Void> startClient() {
-        this.logger.entry();
+    private Future<Void> startClient(final ExecutorService executorService) {
+        this.logger.entry(executorService);
 
-        Future<Void> future;
-
-        try (final ExecutorService myExecutor = Executors.newFixedThreadPool(1)) {
-            future = myExecutor.submit(() -> new Client().call());
-        }
+        Future<Void> future = executorService.submit(() -> new Client(this.portForClientServer).call());
 
         this.logger.exit(future);
 
