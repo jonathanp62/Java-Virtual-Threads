@@ -51,40 +51,23 @@ final class ClientServer implements Runnable {
         this.logger.entry();
 
         final var executorService = Executors.newFixedThreadPool(2);
-        final var semaphore = new Semaphore(1);
-        final var server = this.startServer(executorService, semaphore);
 
-        var semaphoreAcquired = false;
+        final var server = this.startServer(executorService);
+        final var client = this.startClient(executorService);
 
         try {
-            this.logger.debug("Begin waiting on semaphore");
-            semaphore.acquire();
-            this.logger.debug("End waiting on semaphore");
+            this.logger.debug("Begin waiting on client");
+            client.get();
+            this.logger.debug("End waiting on client");
 
-            semaphoreAcquired = true;
-        } catch (final InterruptedException ie) {
-            this.logger.catching(ie);
+            this.logger.debug("Begin waiting on server");
+            server.get();
+            this.logger.debug("End waiting on server");
+        } catch (final InterruptedException | ExecutionException e) {
+            this.logger.catching(e);
 
-            Thread.currentThread().interrupt(); // Restore the interrupt status
-        }
-
-        if (semaphoreAcquired) {
-            final var client = this.startClient(executorService);
-
-            try {
-                this.logger.debug("Begin waiting on client");
-                client.get();
-                this.logger.debug("End waiting on client");
-
-                this.logger.debug("Begin waiting on server");
-                server.get();
-                this.logger.debug("End waiting on server");
-            } catch (final InterruptedException | ExecutionException e) {
-                this.logger.catching(e);
-
-                if (e instanceof InterruptedException)
-                    Thread.currentThread().interrupt(); // Restore the interrupt status
-            }
+            if (e instanceof InterruptedException)
+                Thread.currentThread().interrupt(); // Restore the interrupt status
         }
 
         executorService.shutdown();
@@ -92,10 +75,24 @@ final class ClientServer implements Runnable {
         this.logger.exit();
     }
 
-    private Future<Void> startServer(final ExecutorService executorService, final Semaphore semaphore) {
-        this.logger.entry(executorService, semaphore);
+    private Future<Void> startServer(final ExecutorService executorService) {
+        this.logger.entry(executorService);
+
+        final var semaphore = new Semaphore(1);
 
         Future<Void> future = executorService.submit(() -> new Server(semaphore, this.port).call());
+
+        try {
+            this.logger.debug("Begin waiting on semaphore");
+            semaphore.acquire();
+            this.logger.debug("End waiting on semaphore");
+        } catch (final InterruptedException ie) {
+            this.logger.catching(ie);
+
+            Thread.currentThread().interrupt(); // Restore the interrupt status
+
+            throw new SemaphoreException("Acquisition of the semaphore was interrupted", ie);
+        }
 
         this.logger.exit(future);
 
