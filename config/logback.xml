@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
+ (#)logback.xml 0.4.0   03/23/2024
  (#)logback.xml 0.3.0   03/22/2024
  (#)logback.xml 0.1.0   03/15/2024
 
@@ -57,6 +58,9 @@
         <appender-ref ref="MAIN" />
     </logger>
     <logger name="net.jmp.demo.virtual.threads.Server" additivity="false" level="debug">
+        <appender-ref ref="MAIN" />
+    </logger>
+    <logger name="net.jmp.demo.virtual.threads.Tasks" additivity="false" level="debug">
         <appender-ref ref="MAIN" />
     </logger>
 
