@@ -30,6 +30,9 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -50,8 +53,11 @@ final class Server implements Callable<Void> {
     private final Semaphore semaphore;
     private final int port;
 
-    Server(final Semaphore semaphore, final int port) {
+    Server(final @NotNull Semaphore semaphore, final @Positive int port) {
         super();
+
+        assert semaphore != null;
+        assert port > 0;
 
         this.semaphore = semaphore;
         this.port = port;
@@ -99,8 +105,11 @@ final class Server implements Callable<Void> {
         this.logger.exit();
     }
 
-    private void handleClientRequest(final Socket clientSocket, final CountDownLatch latch) {
+    private void handleClientRequest(final @NotNull Socket clientSocket, final @NotNull CountDownLatch latch) {
         this.logger.entry(clientSocket, latch);
+
+        assert clientSocket != null;
+        assert latch != null;
 
         final var thread = Thread.ofVirtual().start(() -> {
             try (final var in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {

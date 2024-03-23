@@ -71,6 +71,7 @@ repositories {
 dependencies {
     implementation libs.ch.qos.logback.logback.classic
     implementation libs.ch.qos.logback.logback.core
+    implementation libs.jakarta.validation.jakarta.validation.api
     implementation libs.org.slf4j.slf4j.api
     implementation libs.org.slf4j.slf4j.ext
 

@@ -1,6 +1,7 @@
 .gradle
 .idea
 build
-gradle
+gradle/*
+!gradle/libs.versions.toml
 gradlew
 target

@@ -30,8 +30,10 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
+import jakarta.validation.constraints.NotNull;
+
 final class SemaphoreException extends RuntimeException {
-    SemaphoreException(final String message, final Throwable cause) {
+    SemaphoreException(final @NotNull String message, final @NotNull Throwable cause) {
         super(message, cause);
     }
 }

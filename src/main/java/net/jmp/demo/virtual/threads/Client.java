@@ -30,6 +30,8 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
+import jakarta.validation.constraints.Positive;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -47,8 +49,10 @@ final class Client implements Callable<Void> {
     private final int port;
     private static final String HOST_NAME = "localhost";
 
-    Client(final int port) {
+    Client(final @Positive int port) {
         super();
+
+        assert port > 0;
 
         this.port = port;
     }

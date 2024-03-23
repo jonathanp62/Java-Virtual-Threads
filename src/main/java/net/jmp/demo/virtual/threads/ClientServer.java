@@ -30,6 +30,9 @@ package net.jmp.demo.virtual.threads;
  * SOFTWARE.
  */
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.util.concurrent.*;
 
 import org.slf4j.LoggerFactory;
@@ -40,8 +43,10 @@ final class ClientServer implements Runnable {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
     private final int port;
 
-    ClientServer(final int port) {
+    ClientServer(final @Positive int port) {
         super();
+
+        assert port > 0;
 
         this.port = port;
     }
@@ -75,8 +80,10 @@ final class ClientServer implements Runnable {
         this.logger.exit();
     }
 
-    private Future<Void> startServer(final ExecutorService executorService) {
+    private Future<Void> startServer(final @NotNull ExecutorService executorService) {
         this.logger.entry(executorService);
+
+        assert executorService != null;
 
         final var semaphore = new Semaphore(1);
 
@@ -99,8 +106,10 @@ final class ClientServer implements Runnable {
         return future;
     }
 
-    private Future<Void> startClient(final ExecutorService executorService) {
+    private Future<Void> startClient(final @NotNull ExecutorService executorService) {
         this.logger.entry(executorService);
+
+        assert executorService != null;
 
         Future<Void> future = executorService.submit(() -> new Client(this.port).call());
 
