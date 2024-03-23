@@ -35,6 +35,7 @@ import java.io.PrintWriter;
 
 import java.net.Socket;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ import org.slf4j.ext.XLogger;
 final class Client implements Callable<Void> {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
     private final int port;
+    private static final String HOST_NAME = "localhost";
 
     Client(final int port) {
         super();
@@ -67,11 +69,80 @@ final class Client implements Callable<Void> {
     private void transmit() {
         this.logger.entry();
 
+        this.start();
+        this.natoAlphabet();
+        this.exit();
+
+        this.logger.exit();
+    }
+
+    private void start() {
+        this.logger.entry();
+
         try (
-                final var clientSocket = new Socket("localhost", this.port);
+                final var clientSocket = new Socket(HOST_NAME, this.port);
                 final var out = new PrintWriter(clientSocket.getOutputStream(), true)
         ) {
             out.println("start");
+        } catch (final IOException ioe) {
+            this.logger.catching(ioe);
+        }
+
+        this.logger.exit();
+    }
+
+    private void natoAlphabet() {
+        this.logger.entry();
+
+        final var list = List.of(
+                "alpha",
+                "bravo",
+                "charlie",
+                "delta",
+                "echo",
+                "foxtrot",
+                "golf",
+                "hotel",
+                "india",
+                "juliett",
+                "kilo",
+                "lima",
+                "mike",
+                "november",
+                "oscar",
+                "papa",
+                "quebec",
+                "romeo",
+                "sierra",
+                "tango",
+                "uniform",
+                "uniform",
+                "victor",
+                "whiskey",
+                "xray",
+                "zulu"
+        );
+
+        try (
+                final var clientSocket = new Socket(HOST_NAME, this.port);
+                final var out = new PrintWriter(clientSocket.getOutputStream(), true)
+        ) {
+            for (final var word : list)
+                out.println(word);
+        } catch (final IOException ioe) {
+            this.logger.catching(ioe);
+        }
+
+        this.logger.exit();
+    }
+
+    private void exit() {
+        this.logger.entry();
+
+        try (
+                final var clientSocket = new Socket(HOST_NAME, this.port);
+                final var out = new PrintWriter(clientSocket.getOutputStream(), true)
+        ) {
             out.println("exit");    // Signal the server to exit
         } catch (final IOException ioe) {
             this.logger.catching(ioe);
